@@ -1,0 +1,36 @@
+name: Build APK - Multiplayer Server
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create Multiplayer Game
+        run: |
+          mkdir -p www
+          # Your game is index.html at root -> copy to www
+          cp index.html www/index.html
+          echo '{"name":"jaan-nurie-multi","version":"2.0.0","private":true,"dependencies":{"@capacitor/core":"^5.7.0","@capacitor/android":"^5.7.0","@capacitor/cli":"^5.7.0"}}' > package.json
+          echo '{"appId":"com.el19.jaannurie.life","appName":"Jaan Nurie Life","webDir":"www"}' > capacitor.config.json
+          wc -c www/index.html
+          ls -lh www/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+      - uses: android-actions/setup-android@v3
+      - run: npm install
+      - run: npx cap add android
+      - run: npx cap copy android
+      - name: Build APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jaan-Nurie-MULTIPLAYER-2P-SERVER
+          path: android/app/build/outputs/apk/debug/app-debug.apk
